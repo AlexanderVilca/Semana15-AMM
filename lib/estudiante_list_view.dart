@@ -116,7 +116,7 @@ class _StudentListViewState extends State<StudentListView> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => StudentDetailView()),
+            MaterialPageRoute(builder: (context) => const StudentDetailView()),
           ).then((value) => fetchStudents());
         },
         child: Icon(Icons.add),

@@ -1,84 +1,100 @@
+import 'dart:async';
 import 'package:sqflite/sqflite.dart';
-import 'package:sqflite/sqlite_api.dart';
 import 'package:path/path.dart';
+import 'estudiante.dart';
 
 class EstudianteDatabase {
-  static final EstudianteDatabase instance = EstudianteDatabase._internal();
+  static final EstudianteDatabase instance = EstudianteDatabase._init();
+
   static Database? _database;
 
-  EstudianteDatabase._internal();
+  EstudianteDatabase._init();
 
   Future<Database> get database async {
-    if (_database != null) return _database!; 
-
-    _database = await _initDatabase();
+    if (_database != null) return _database!;
+    _database = await _initDB('estudiantes.db');
     return _database!;
   }
 
-  Future<Database> _initDatabase() async {
-    final databasePath = await getDatabasesPath();
-    final path = join(databasePath, 'estudiantes.db'); 
+  Future<Database> _initDB(String filePath) async {
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, filePath);
 
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _createDatabase, 
-    );
+    return await openDatabase(path, version: 1, onCreate: _createDB);
   }
 
-  Future<void> _createDatabase(Database db, int version) async {
+  Future _createDB(Database db, int version) async {
+    const idType = 'INTEGER PRIMARY KEY AUTOINCREMENT';
+    const textType = 'TEXT NOT NULL';
+    const integerType = 'INTEGER NOT NULL';
+
     await db.execute('''
-      CREATE TABLE estudiantes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nombre TEXT NOT NULL,
-        carrera TEXT NOT NULL,
-        fechaIngreso TEXT NOT NULL,
-        edad INTEGER NOT NULL
-      )
-    ''');
+CREATE TABLE estudiantes ( 
+  id $idType, 
+  nombre $textType,
+  carrera $textType,
+  fechaIngreso $textType,
+  edad $integerType
+  )
+''');
   }
 
-
-  Future<int> create(Map<String, dynamic> estudiante) async {
+  Future<Estudiante> create(Estudiante estudiante) async {
     final db = await instance.database;
-    return await db.insert('estudiantes', estudiante);
+
+    final id = await db.insert('estudiantes', estudiante.toMap());
+    return estudiante.copy(id: id);
   }
 
-  Future<Map<String, dynamic>?> read(int id) async {
+  Future<Estudiante> read(int id) async {
     final db = await instance.database;
-    final maps = await db.query('estudiantes', where: 'id = ?', whereArgs: [id]);
+
+    final maps = await db.query(
+      'estudiantes',
+      columns: EstudianteFields.values,
+      where: '${EstudianteFields.id} = ?',
+      whereArgs: [id],
+    );
+
     if (maps.isNotEmpty) {
-      return maps.first;
+      return Estudiante.fromMap(maps.first);
     } else {
-      return null;
+      throw Exception('ID $id not found');
     }
   }
 
   Future<List<Map<String, dynamic>>> readAll() async {
     final db = await instance.database;
-    return await db.query('estudiantes');
+
+    final result = await db.query('estudiantes');
+
+    return result;
   }
 
-  Future<int> update(int id, Map<String, dynamic> estudiante) async {
+  Future<int> update(Estudiante estudiante) async {
     final db = await instance.database;
-    return await db.update('estudiantes', estudiante, where: 'id = ?', whereArgs: [id]);
+
+    return db.update(
+      'estudiantes',
+      estudiante.toMap(),
+      where: 'id = ?',
+      whereArgs: [estudiante.id],
+    );
   }
 
   Future<int> delete(int id) async {
     final db = await instance.database;
-    return await db.delete('estudiantes', where: 'id = ?', whereArgs: [id]);
+
+    return await db.delete(
+      'estudiantes',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
-  Future<void> close() async {
+  Future close() async {
     final db = await instance.database;
+
     db.close();
-  }
-
-  static String dateTimeToString(DateTime date) {
-    return date.toIso8601String().split('T')[0];
-  }
-
-  static DateTime stringToDateTime(String date) {
-    return DateTime.parse(date);
   }
 }

@@ -1,3 +1,15 @@
+class EstudianteFields {
+  static final List<String> values = [
+    id, nombre, carrera, fechaIngreso, edad
+  ];
+
+  static final String id = 'id';
+  static final String nombre = 'nombre';
+  static final String carrera = 'carrera';
+  static final String fechaIngreso = 'fechaIngreso';
+  static final String edad = 'edad';
+}
+
 class Estudiante {
   final int? id;
   final String nombre;
@@ -13,23 +25,38 @@ class Estudiante {
     required this.edad,
   });
 
+  Estudiante copy({
+    int? id,
+    String? nombre,
+    String? carrera,
+    DateTime? fechaIngreso,
+    int? edad,
+  }) =>
+      Estudiante(
+        id: id ?? this.id,
+        nombre: nombre ?? this.nombre,
+        carrera: carrera ?? this.carrera,
+        fechaIngreso: fechaIngreso ?? this.fechaIngreso,
+        edad: edad ?? this.edad,
+      );
+
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
-      'nombre': nombre,
-      'carrera': carrera,
-      'fechaIngreso': fechaIngreso.toIso8601String(),
-      'edad': edad,
+      EstudianteFields.id: id,
+      EstudianteFields.nombre: nombre,
+      EstudianteFields.carrera: carrera,
+      EstudianteFields.fechaIngreso: fechaIngreso.toIso8601String(),
+      EstudianteFields.edad: edad,
     };
   }
 
   factory Estudiante.fromMap(Map<String, dynamic> map) {
     return Estudiante(
-      id: map['id'],
-      nombre: map['nombre'],
-      carrera: map['carrera'],
-      fechaIngreso: DateTime.parse(map['fechaIngreso']),
-      edad: map['edad'],
+      id: map[EstudianteFields.id],
+      nombre: map[EstudianteFields.nombre],
+      carrera: map[EstudianteFields.carrera],
+      fechaIngreso: DateTime.parse(map[EstudianteFields.fechaIngreso]),
+      edad: map[EstudianteFields.edad],
     );
   }
 }
